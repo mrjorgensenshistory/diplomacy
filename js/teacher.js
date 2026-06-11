@@ -417,19 +417,9 @@
 
   /* ---------- war room music (this screen only) ---------- */
 
-  /* "Over There mix": clean USAF Band instrumental loops; every third
-     piece, the real 1917 recording with voices plays once, then back. */
-  var OVERTHERE_MIX = {
-    instrumental: 'audio/overthere-instrumental-usaf-band.mp3',
-    vocal: 'audio/overthere-vocal-1917-restored.mp3',
-    vocalEvery: 3
-  };
   var MUSIC_TRACKS = [
-    { label: '★ Over There mix — instrumental, with the 1917 voices now and then', mix: true },
     { label: 'Hero Down — sad piano (WW1 is a sad game)', file: 'audio/defeat-hero-down.mp3' },
-    { label: 'Over There — USAF Band instrumental only', file: 'audio/overthere-instrumental-usaf-band.mp3' },
     { label: 'Over There — 1917 vocal, restored', file: 'audio/overthere-vocal-1917-restored.mp3' },
-    { label: 'Over There — Enrico Caruso, 1918', file: 'audio/overthere-vocal-caruso-1918.mp3' },
     { label: 'Stormfront — epic orchestral war', file: 'audio/battle-stormfront.mp3' },
     { label: "It's a Long Way to Tipperary — 1914", file: 'audio/period-tipperary-imperial-quartet-1914.mp3' },
     { label: 'Pack Up Your Troubles — 1917', file: 'audio/period-pack-up-your-troubles-1917.mp3' },
@@ -438,20 +428,13 @@
     { label: 'Dark Times — brooding strings', file: 'audio/warroom-dark-times.mp3' }
   ];
   var musicEl = new Audio();
+  musicEl.loop = true;
   var fanfareEl = new Audio('audio/victory-fanfare-for-space.mp3');
   var musicPlaying = false;
-  var mixCount = 0;
 
   function startTrack() {
     var t = MUSIC_TRACKS[Number($('musicSel').value)] || MUSIC_TRACKS[0];
-    if (t.mix) {
-      musicEl.loop = false;
-      musicEl.src = (mixCount % OVERTHERE_MIX.vocalEvery === OVERTHERE_MIX.vocalEvery - 1)
-        ? OVERTHERE_MIX.vocal : OVERTHERE_MIX.instrumental;
-    } else {
-      musicEl.loop = true;
-      musicEl.src = t.file;
-    }
+    musicEl.src = t.file;
     musicEl.play().catch(function () {});
   }
 
@@ -482,18 +465,12 @@
     });
     sel.addEventListener('change', function () {
       localStorage.setItem('diplomacy_music_track', sel.value);
-      mixCount = 0;
       if (musicPlaying) startTrack();
     });
     $('musicVol').addEventListener('input', function () {
       localStorage.setItem('diplomacy_music_vol', $('musicVol').value);
       musicEl.volume = Number($('musicVol').value) / 100;
       fanfareEl.volume = Math.min(1, musicEl.volume + 0.2);
-    });
-    musicEl.addEventListener('ended', function () {
-      if (!musicPlaying) return;
-      mixCount++;
-      startTrack();         // only mix tracks end (others loop)
     });
     fanfareEl.addEventListener('ended', function () {
       if (musicPlaying) musicEl.play().catch(function () {});

@@ -89,3 +89,5 @@ overthere-vocal-1917-restored.mp3 - "Over There" (1917), restored transfer via W
 overthere-vocal-caruso-1918.mp3 - "Over There", Enrico Caruso, 1918. Public domain.
   https://archive.org/details/78_over-there_enrico-caruso-geo-m-cohan-louis-delamarre_gbia0290409a
 (period-over-there-billy-murray-1917.mp3 removed - too much static)
+
+(USAF medley + Caruso removed - only the restored 1917 vocal kept, per teacher)
