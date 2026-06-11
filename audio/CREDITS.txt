@@ -69,3 +69,14 @@ SIZE NOTE: Candidate set totals ~57 MB. After the teacher picks
 final tracks, DELETE the unused candidates before committing to
 GitHub Pages to stay under the ~40 MB budget. Re-encoding kept
 tracks to 128 kbps (ffmpeg -b:a 128k) roughly halves their size.
+
+--- Period recordings (public domain, Internet Archive / Great 78 Project) ---
+period-over-there-billy-murray-1917.mp3 - "Over There" (George M. Cohan), Billy Murray, 1917. Public domain.
+  https://archive.org/details/78_over-there_billy-murray-george-m-cohan_gbia0088690a
+period-tipperary-imperial-quartet-1914.mp3 - "It's a Long Way to Tipperary", Imperial Quartet, 1914. Public domain.
+  https://archive.org/details/78_its-a-long-way-to-tipperary_imperial-quartet_gbia0076793a
+period-pack-up-your-troubles-1917.mp3 - "Pack Up Your Troubles in Your Old Kit Bag", Helen Clark, 1917. Public domain.
+  https://archive.org/details/78_pack-up-your-troubles-in-your-old-kit-bag-and-smile-smile-smile_helen-clark-felix_gbia0083430b
+period-tipperary-march-band-1907.mp3 - "Tipperary March", Zon-o-phone Concert Band, 1907. Public domain.
+  https://archive.org/details/78_tipperary-march_zon-o-phone-concert-band_gbia0451700a
+(warroom-covert-affair.mp3 removed - not selected)
