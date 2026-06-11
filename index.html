@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diplomacy — 1901</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⚓</text></svg>">
+</head>
+<body>
+
+<!-- JOIN SCREEN -->
+<div id="join" class="joinwrap" style="display:none">
+  <div class="joincard">
+    <h1>Diplomacy</h1>
+    <div class="tag">Europe, 1901. Seven Great Powers. One winner.</div>
+    <p class="small">Enter the country code your teacher gave you:</p>
+    <input id="joinCode" maxlength="12" placeholder="FRA-XXXX" autocomplete="off">
+    <button class="act" id="joinBtn">Take Command</button>
+    <div class="joinerr" id="joinErr"></div>
+    <p class="small muted">Your game saves automatically. Come back any class period and the board will be exactly where you left it.</p>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game" style="display:none">
+  <header class="topbar">
+    <h1>Diplomacy</h1>
+    <span class="sub" id="gameName"></span>
+    <span class="badge phase" id="phaseBadge"></span>
+    <span class="badge power" id="powerBadge"></span>
+    <span class="badge" id="scBadge"></span>
+    <span class="badge" id="lockBadge"></span>
+    <span class="spacer"></span>
+    <button class="act ghost" id="leaveBtn" title="Switch to a different code">Sign out</button>
+  </header>
+
+  <main class="layout">
+    <div class="boardwrap">
+      <svg class="board" id="boardSvg"></svg>
+    </div>
+
+    <div class="panel">
+      <div id="banners"></div>
+
+      <div class="tabs">
+        <button id="tabOrders" class="active">Orders</button>
+        <button id="tabMsgs">Diplomacy <span id="msgCount"></span></button>
+        <button id="tabLast">Last Turn</button>
+      </div>
+
+      <!-- ORDERS TAB -->
+      <div id="paneOrders">
+        <div class="hint" id="orderHint">Click one of your units on the map to give it an order.</div>
+        <div class="actionbar" id="actionBar"></div>
+        <h2 style="margin-top:8px">Your Orders</h2>
+        <ul class="orders" id="orderList"></ul>
+        <div class="actionbar" style="margin-top:8px">
+          <button class="act good" id="submitBtn">Submit orders ✓</button>
+          <button class="act ghost" id="unsubmitBtn" style="display:none">Edit orders again</button>
+        </div>
+        <div class="statusline" id="whoIsIn"></div>
+      </div>
+
+      <!-- MESSAGES TAB -->
+      <div id="paneMsgs" style="display:none">
+        <div class="hint">Negotiate in secret. Promises are not binding — that's Diplomacy. <b>Your teacher can read every message.</b></div>
+        <div class="msgcompose">
+          <select id="msgTo"></select>
+        </div>
+        <div class="msgcompose">
+          <textarea id="msgText" maxlength="500" placeholder="Propose an alliance… or pretend to."></textarea>
+          <button class="act" id="msgSend">Send</button>
+        </div>
+        <div class="msglist" id="msgList"></div>
+      </div>
+
+      <!-- LAST TURN TAB -->
+      <div id="paneLast" style="display:none">
+        <h2 id="lastLabel">Last Turn</h2>
+        <div class="actionbar">
+          <button class="act ghost" id="showArrowsBtn">Show moves on map</button>
+        </div>
+        <ul class="orders" id="lastList"></ul>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="modalHost"></div>
+
+<script src="shared/map-data.js"></script>
+<script src="shared/engine.js"></script>
+<script src="shared/bot.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/board.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

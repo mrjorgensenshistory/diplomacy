@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diplomacy — War Room (Teacher)</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🗺️</text></svg>">
+</head>
+<body>
+
+<!-- TEACHER LOGIN -->
+<div id="tjoin" class="joinwrap" style="display:none">
+  <div class="joincard">
+    <h1>War Room</h1>
+    <div class="tag">Teacher command center</div>
+    <p class="small">Enter your teacher key (set during Apps Script setup; anything works in practice mode):</p>
+    <input id="tkeyInput" type="password" placeholder="teacher key" autocomplete="off">
+    <button class="act" id="tkeyBtn">Enter</button>
+    <div class="joinerr" id="tkeyErr"></div>
+  </div>
+</div>
+
+<div id="tmain" style="display:none">
+  <header class="topbar">
+    <h1>Diplomacy — War Room</h1>
+    <span class="badge" id="modeBadge"></span>
+    <span class="spacer"></span>
+    <label class="small" style="color:#e8dcbf">Map style (all games):
+      <select id="allStyle">
+        <option value="empire">Empire (countries colored)</option>
+        <option value="terrain">Classic terrain (1976 look)</option>
+      </select>
+    </label>
+    <button class="act ghost" id="allStyleBtn">Apply</button>
+    <button class="act good" id="unlockAllBtn">🔓 Unlock all (class started)</button>
+    <button class="act warn" id="lockAllBtn">🔒 Lock all (class over)</button>
+    <button class="act ghost" id="tLogout">Sign out</button>
+  </header>
+
+  <main style="max-width:1700px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px">
+
+    <!-- GAME LIST -->
+    <div class="panel">
+      <h2>Your Games</h2>
+      <table class="games">
+        <thead><tr>
+          <th>Game</th><th>Phase</th><th>Orders in</th><th>Status</th><th style="width:330px">Actions</th>
+        </tr></thead>
+        <tbody id="gameRows"></tbody>
+      </table>
+      <div class="actionbar">
+        <button class="act" id="newGameBtn">＋ New game (7 players)</button>
+        <button class="act ghost" id="refreshBtn">↻ Refresh</button>
+      </div>
+      <div class="hint" id="tHint">
+        <b>Class flow:</b> Unlock at the start of class → kids negotiate &amp; enter orders → when time's up
+        hit <b>Resolve</b> on each game (units without orders simply hold) → Lock at the end of class.
+        <b>Undo</b> reverses the last resolution if something went wrong.
+      </div>
+    </div>
+
+    <!-- GAME DETAIL -->
+    <div class="panel" id="detailPanel" style="display:none">
+      <h2 id="dTitle"></h2>
+      <div class="actionbar">
+        <span class="badge phase" id="dPhase"></span>
+        <span class="badge" id="dLock"></span>
+        <button class="act good" id="dResolve">⚔ Resolve this turn</button>
+        <button class="act" id="dLockBtn"></button>
+        <button class="act warn" id="dUndo">↩ Undo last turn</button>
+        <button class="act ghost" id="dClose">Close</button>
+      </div>
+      <div id="dWinner"></div>
+
+      <h2>Country Codes <span class="small muted">(hand these to your players — regenerate if leaked)</span></h2>
+      <div class="codegrid" id="dCodes"></div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px">
+        <div>
+          <h2>Board</h2>
+          <div class="boardwrap" style="box-shadow:none">
+            <svg class="board" id="dBoard"></svg>
+          </div>
+          <div class="actionbar" style="margin-top:6px">
+            <button class="act ghost" id="dShowLast">Show last turn's moves</button>
+          </div>
+        </div>
+        <div style="min-width:0">
+          <h2>Orders this turn</h2>
+          <ul class="orders" id="dOrders" style="max-height:300px"></ul>
+          <h2 style="margin-top:10px">Messages (all private mail, visible to you)</h2>
+          <div class="msglist" id="dMsgs" style="max-height:300px"></div>
+          <h2 style="margin-top:10px">Settings</h2>
+          <div class="small" style="display:flex;flex-direction:column;gap:6px" id="dSettings"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHOOL HOURS -->
+    <div class="panel">
+      <h2>School-Hours Backstop</h2>
+      <div class="small" id="schedNote">
+        Even if you forget to lock, the server refuses all student actions outside these hours
+        (classroom mode only — practice mode skips this).
+      </div>
+      <div class="actionbar" style="align-items:center">
+        <label class="small">Days:
+          <select id="schedDays">
+            <option value="12345">Mon–Fri</option>
+            <option value="1234567">Every day</option>
+          </select>
+        </label>
+        <label class="small">From <input id="schedStart" type="time" value="08:00"></label>
+        <label class="small">To <input id="schedEnd" type="time" value="15:30"></label>
+        <label class="small"><input type="checkbox" id="schedOn" checked> Enforce</label>
+        <button class="act" id="schedSave">Save schedule</button>
+        <span class="small muted" id="schedStatus"></span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="modalHost"></div>
+
+<script src="shared/map-data.js"></script>
+<script src="shared/engine.js"></script>
+<script src="shared/bot.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/board.js"></script>
+<script src="js/teacher.js"></script>
+</body>
+</html>

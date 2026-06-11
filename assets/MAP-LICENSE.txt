@@ -1,0 +1,13 @@
+Map artwork: wikimedia-diplomacy.svg
+Source: "Diplomacy.svg" by Martin Asal
+https://commons.wikimedia.org/wiki/File:Diplomacy.svg
+License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Changes in this project: recolored at runtime (province fills, supply-center
+dots tinted by owning power), baked-in starting-unit markers removed and
+replaced by live game pieces, labels restyled. Per the ShareAlike term, this
+adapted artwork remains available under CC BY-SA 3.0.
+
+Everything else in this repository (game engine, clients, backend) is original
+code and may be used freely for classroom purposes.
