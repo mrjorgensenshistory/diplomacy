@@ -52,12 +52,18 @@ function json_(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/* every tab and its header row — sheets self-create on first use,
+   so the game works even if setup() is never run */
+var SHEET_HEADERS_ = {
+  Games: ['id', 'name', 'created', 'locked', 'codesJSON', 'settingsJSON', 'version'],
+  State: ['gameId', 'stateJSON'],
+  Orders: ['gameId', 'power', 'ordersJSON', 'submitted', 'updated'],
+  History: ['gameId', 'idx', 'label', 'stateBeforeJSON', 'ordersJSON', 'resultsJSON', 'ts'],
+  Messages: ['gameId', 'ts', 'from', 'to', 'text', 'turn']
+};
+
 function setup() {
-  sheet_('Games', ['id', 'name', 'created', 'locked', 'codesJSON', 'settingsJSON', 'version']);
-  sheet_('State', ['gameId', 'stateJSON']);
-  sheet_('Orders', ['gameId', 'power', 'ordersJSON', 'submitted', 'updated']);
-  sheet_('History', ['gameId', 'idx', 'label', 'stateBeforeJSON', 'ordersJSON', 'resultsJSON', 'ts']);
-  sheet_('Messages', ['gameId', 'ts', 'from', 'to', 'text', 'turn']);
+  for (var name in SHEET_HEADERS_) sheet_(name);
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('SCHEDULE')) {
     props.setProperty('SCHEDULE', JSON.stringify({
@@ -67,12 +73,12 @@ function setup() {
   Logger.log('Setup complete. Now deploy as a web app (see README).');
 }
 
-function sheet_(name, headers) {
+function sheet_(name) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(name);
   if (!sh) {
     sh = ss.insertSheet(name);
-    sh.appendRow(headers);
+    sh.appendRow(SHEET_HEADERS_[name] || ['data']);
     sh.setFrozenRows(1);
   }
   return sh;
