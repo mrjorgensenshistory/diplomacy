@@ -10,6 +10,6 @@
  * ============================================================ */
 
 var DIPLO_CONFIG = {
-  API_URL: 'MOCK',
+  API_URL: 'https://script.google.com/macros/s/AKfycbz92l_7lz83PB_RT4787CHSo9I741ty4UaMtr1aaEccIjnRqojf6D_IYUlEjAVa8Q/exec',
   POLL_SECONDS: 10
 };
