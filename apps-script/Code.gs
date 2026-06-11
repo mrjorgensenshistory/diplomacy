@@ -62,6 +62,21 @@ var SHEET_HEADERS_ = {
   Messages: ['gameId', 'ts', 'from', 'to', 'text', 'turn']
 };
 
+/* Nuclear repair: deletes and rebuilds all five game tabs with correct
+   headers. Run this if tabs ever get corrupted. WIPES ALL GAMES. */
+function repairTabs() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  for (var name in SHEET_HEADERS_) {
+    var sh = ss.getSheetByName(name);
+    if (sh) {
+      if (ss.getSheets().length === 1) ss.insertSheet('keep');
+      ss.deleteSheet(sh);
+    }
+  }
+  for (var n2 in SHEET_HEADERS_) sheet_(n2);
+  Logger.log('Tabs rebuilt clean. Create a new game from the War Room.');
+}
+
 function setup() {
   for (var name in SHEET_HEADERS_) sheet_(name);
   var props = PropertiesService.getScriptProperties();
@@ -321,6 +336,19 @@ function allSubmitted_(g) {
 
 function route_(payload) {
   var a = payload.action;
+
+  /* health check: tab names, headers, row counts — no game data, no codes */
+  if (a === 'diag') {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var out = {};
+    for (var name in SHEET_HEADERS_) {
+      var sh = ss.getSheetByName(name);
+      out[name] = sh
+        ? { rows: sh.getLastRow() - 1, headers: sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0] }
+        : 'MISSING';
+    }
+    return { ok: true, tabs: out };
+  }
 
   /* ----- student ----- */
   if (a === 'join' || a === 'state') {
