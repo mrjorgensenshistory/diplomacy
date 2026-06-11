@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diplomacy — Music Audition Room</title>
+<title>Diplomacy — Music Room</title>
 <link rel="stylesheet" href="css/style.css">
 <style>
   .audwrap { max-width: 860px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
@@ -19,85 +19,84 @@
 <body>
 <header class="topbar">
   <h1>Diplomacy</h1>
-  <span class="sub">Music Audition Room — pick your soundtrack</span>
+  <span class="sub">Music Room — the War Room soundtrack</span>
 </header>
 
 <main class="audwrap">
   <div class="panel">
-    <h2>How to choose</h2>
+    <h2>How it works in class</h2>
     <div class="small">
-      Press play on anything. You're picking up to three roles:
-      <b>① a background loop</b> kids hear while plotting orders,
-      <b>② a victory fanfare</b> when someone wins,
-      <b>③ a defeat lament</b> for the fallen.
-      Tell Claude your picks (e.g., <i>"background: Covert Affair, victory: fanfare, defeat: Hero Down"</i>)
-      and they get wired into the game. Music will be <b>off by default</b> with a 🎵 button —
-      nothing autoplays at full volume across 28 Chromebooks.
+      Music plays from the <b>teacher's screen only</b> (the War Room has a 🎵 player) —
+      not on 28 student Chromebooks. The <b>victory fanfare</b> sounds automatically when
+      any board crowns a winner. Default theme: <b>Hero Down</b>, because WW1 is a sad game.
     </div>
   </div>
 
   <div class="panel">
-    <h2>① War-room background (loops while plotting)</h2>
+    <h2>Original WW1-era recordings (public domain)</h2>
     <div class="trackcard">
-      <span class="moodtag">sly tension</span>
-      <div class="info"><div class="tname">Covert Affair</div>
-        <div class="tdesc">Noir spy-jazz — back-room deals, cigarette smoke, whispered betrayals.</div></div>
-      <audio controls preload="none" src="audio/warroom-covert-affair.mp3"></audio>
+      <span class="moodtag">1917</span>
+      <div class="info"><div class="tname">Over There — Billy Murray</div>
+        <div class="tdesc">George M. Cohan's anthem of American entry — the original record.</div></div>
+      <audio controls preload="none" src="audio/period-over-there-billy-murray-1917.mp3"></audio>
     </div>
     <div class="trackcard">
-      <span class="moodtag">brooding</span>
-      <div class="info"><div class="tname">Dark Times</div>
-        <div class="tdesc">Low strings and dread — the continent holds its breath.</div></div>
-      <audio controls preload="none" src="audio/warroom-dark-times.mp3"></audio>
+      <span class="moodtag">1914</span>
+      <div class="info"><div class="tname">It's a Long Way to Tipperary — Imperial Quartet</div>
+        <div class="tdesc">The British marching song, recorded as the war began.</div></div>
+      <audio controls preload="none" src="audio/period-tipperary-imperial-quartet-1914.mp3"></audio>
     </div>
     <div class="trackcard">
-      <span class="moodtag">ticking clock</span>
-      <div class="info"><div class="tname">Volatile Reaction</div>
-        <div class="tdesc">Percussive suspense — orders due, time running out.</div></div>
-      <audio controls preload="none" src="audio/warroom-volatile-reaction.mp3"></audio>
+      <span class="moodtag">1917</span>
+      <div class="info"><div class="tname">Pack Up Your Troubles — Helen Clark</div>
+        <div class="tdesc">Smile, smile, smile — the trench morale anthem.</div></div>
+      <audio controls preload="none" src="audio/period-pack-up-your-troubles-1917.mp3"></audio>
     </div>
     <div class="trackcard">
-      <span class="moodtag">military march</span>
-      <div class="info"><div class="tname">Invariance</div>
-        <div class="tdesc">Snare and brass — armies on the move, boots on cobblestone.</div></div>
-      <audio controls preload="none" src="audio/march-invariance.mp3"></audio>
+      <span class="moodtag">1907</span>
+      <div class="info"><div class="tname">Tipperary March — Zon-o-phone Concert Band</div>
+        <div class="tdesc">Instrumental brass band march, no vocals.</div></div>
+      <audio controls preload="none" src="audio/period-tipperary-march-band-1907.mp3"></audio>
     </div>
+  </div>
+
+  <div class="panel">
+    <h2>Orchestral themes</h2>
     <div class="trackcard">
-      <span class="moodtag">epic orchestral</span>
-      <div class="info"><div class="tname">Five Armies</div>
-        <div class="tdesc">Big sweeping war theme — trailer-grade drama.</div></div>
-      <audio controls preload="none" src="audio/battle-five-armies.mp3"></audio>
+      <span class="moodtag">main theme</span>
+      <div class="info"><div class="tname">Hero Down</div>
+        <div class="tdesc">Mournful solo piano and strings — the default War Room theme.</div></div>
+      <audio controls preload="none" src="audio/defeat-hero-down.mp3"></audio>
     </div>
     <div class="trackcard">
       <span class="moodtag">storm of war</span>
       <div class="info"><div class="tname">Stormfront</div>
-        <div class="tdesc">Sweeping orchestral conflict — the longest, grandest of the set.</div></div>
+        <div class="tdesc">Sweeping orchestral conflict.</div></div>
       <audio controls preload="none" src="audio/battle-stormfront.mp3"></audio>
     </div>
-  </div>
-
-  <div class="panel">
-    <h2>② Victory fanfare</h2>
     <div class="trackcard">
-      <span class="moodtag">triumphant</span>
+      <span class="moodtag">march</span>
+      <div class="info"><div class="tname">Invariance</div>
+        <div class="tdesc">Snare and brass — armies on the move.</div></div>
+      <audio controls preload="none" src="audio/march-invariance.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">brooding</span>
+      <div class="info"><div class="tname">Dark Times</div>
+        <div class="tdesc">Low strings and dread.</div></div>
+      <audio controls preload="none" src="audio/warroom-dark-times.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">victory</span>
       <div class="info"><div class="tname">Fanfare for Space</div>
-        <div class="tdesc">Bright brass triumph — plays once when a winner is crowned.</div></div>
+        <div class="tdesc">Bright brass triumph — fires automatically when a winner is crowned.</div></div>
       <audio controls preload="none" src="audio/victory-fanfare-for-space.mp3"></audio>
     </div>
   </div>
 
-  <div class="panel">
-    <h2>③ Defeat lament</h2>
-    <div class="trackcard">
-      <span class="moodtag">mournful</span>
-      <div class="info"><div class="tname">Hero Down</div>
-        <div class="tdesc">Solo piano and strings — for empires that are no more.</div></div>
-      <audio controls preload="none" src="audio/defeat-hero-down.mp3"></audio>
-    </div>
-  </div>
-
   <div class="panel small muted">
-    All tracks by Kevin MacLeod (incompetech.com), Creative Commons BY 4.0 — free for classroom use with credit (already included in the game).
+    Period recordings: public domain via the Internet Archive's Great 78 Project.
+    Orchestral tracks: Kevin MacLeod (incompetech.com), CC BY 4.0. Full credits in audio/CREDITS.txt.
   </div>
 </main>
 </body>

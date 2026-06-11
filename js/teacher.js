@@ -57,7 +57,10 @@
 
   async function refresh() {
     var r = await tcall({ action: 'tlist' });
-    if (r.ok) renderGames(r.games);
+    if (r.ok) {
+      renderGames(r.games);
+      checkFanfare(r.games);
+    }
     if (currentGame) openDetail(currentGame, true);
   }
 
@@ -411,6 +414,79 @@
     });
     $('schedStatus').textContent = r.ok ? (r.note || 'Saved ✓') : ('⚠️ ' + r.error);
   });
+
+  /* ---------- war room music (this screen only) ---------- */
+
+  var MUSIC_TRACKS = [
+    { label: 'Hero Down — sad piano (the main theme; WW1 is a sad game)', file: 'audio/defeat-hero-down.mp3' },
+    { label: 'Stormfront — epic orchestral war', file: 'audio/battle-stormfront.mp3' },
+    { label: 'Over There — Billy Murray, 1917', file: 'audio/period-over-there-billy-murray-1917.mp3' },
+    { label: "It's a Long Way to Tipperary — 1914", file: 'audio/period-tipperary-imperial-quartet-1914.mp3' },
+    { label: 'Pack Up Your Troubles — 1917', file: 'audio/period-pack-up-your-troubles-1917.mp3' },
+    { label: 'Tipperary March — brass band, 1907', file: 'audio/period-tipperary-march-band-1907.mp3' },
+    { label: 'Invariance — military snare march', file: 'audio/march-invariance.mp3' },
+    { label: 'Dark Times — brooding strings', file: 'audio/warroom-dark-times.mp3' }
+  ];
+  var musicEl = new Audio();
+  musicEl.loop = true;
+  var fanfareEl = new Audio('audio/victory-fanfare-for-space.mp3');
+  var musicPlaying = false;
+
+  (function initMusic() {
+    var sel = $('musicSel');
+    MUSIC_TRACKS.forEach(function (t, i) {
+      var o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = t.label;
+      sel.appendChild(o);
+    });
+    sel.value = localStorage.getItem('diplomacy_music_track') || '0';
+    $('musicVol').value = localStorage.getItem('diplomacy_music_vol') || '60';
+    musicEl.volume = Number($('musicVol').value) / 100;
+    fanfareEl.volume = Math.min(1, musicEl.volume + 0.2);
+
+    $('musicBtn').addEventListener('click', function () {
+      if (musicPlaying) {
+        musicEl.pause();
+        musicPlaying = false;
+        $('musicBtn').textContent = '▶ Play';
+      } else {
+        musicEl.src = MUSIC_TRACKS[Number(sel.value)].file;
+        musicEl.play().catch(function () {});
+        musicPlaying = true;
+        $('musicBtn').textContent = '⏸ Pause';
+      }
+    });
+    sel.addEventListener('change', function () {
+      localStorage.setItem('diplomacy_music_track', sel.value);
+      if (musicPlaying) {
+        musicEl.src = MUSIC_TRACKS[Number(sel.value)].file;
+        musicEl.play().catch(function () {});
+      }
+    });
+    $('musicVol').addEventListener('input', function () {
+      localStorage.setItem('diplomacy_music_vol', $('musicVol').value);
+      musicEl.volume = Number($('musicVol').value) / 100;
+      fanfareEl.volume = Math.min(1, musicEl.volume + 0.2);
+    });
+    fanfareEl.addEventListener('ended', function () {
+      if (musicPlaying) musicEl.play().catch(function () {});
+    });
+  })();
+
+  /* a board just crowned a winner -> trumpets (ducks the main theme) */
+  var knownWinners = {};
+  function checkFanfare(games) {
+    (games || []).forEach(function (g) {
+      var had = knownWinners[g.gameId];
+      if (g.winner && had === null) {
+        if (musicPlaying) musicEl.pause();
+        fanfareEl.currentTime = 0;
+        fanfareEl.play().catch(function () {});
+      }
+      knownWinners[g.gameId] = g.winner || null;
+    });
+  }
 
   /* ---------- boot ---------- */
 

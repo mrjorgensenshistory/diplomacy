@@ -40,6 +40,15 @@
 
   <main style="max-width:1700px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px">
 
+    <!-- MUSIC (teacher's screen only) -->
+    <div class="panel" style="flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap">
+      <b style="font-variant:small-caps;letter-spacing:1px">🎵 War Room music</b>
+      <select id="musicSel" style="flex:1;min-width:220px;font-family:inherit;padding:5px;border:1px solid var(--line);border-radius:5px;background:#fffdf6"></select>
+      <button class="act" id="musicBtn">▶ Play</button>
+      <input id="musicVol" type="range" min="0" max="100" value="60" style="width:110px" title="Volume">
+      <span class="small muted">Plays on this screen only. The victory fanfare sounds by itself when a board crowns a winner.</span>
+    </div>
+
     <!-- GAME LIST -->
     <div class="panel">
       <h2>Your Games</h2>
