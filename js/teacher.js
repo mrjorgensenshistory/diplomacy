@@ -271,16 +271,37 @@
     (r.messages || []).slice().sort(function (a, b) { return a.ts < b.ts ? -1 : 1; }).forEach(function (m) {
       var div = document.createElement('div');
       div.className = 'msg in';
-      div.innerHTML = '<div class="meta">' + esc(envoy(m.from)) + ' → ' +
+      var kindIcon = { alliance: '🤝 ', peace: '🕊 ', threat: '⚔ ' }[m.kind] || '';
+      div.innerHTML = '<div class="meta">' + kindIcon + esc(envoy(m.from)) + ' → ' +
         esc(envoy(m.to)) + ' · ' + esc(m.turn || '') + '</div>' + esc(m.text);
       ml.appendChild(div);
     });
     if (!(r.messages || []).length) ml.innerHTML = '<div class="muted small">No messages yet.</div>';
     ml.scrollTop = ml.scrollHeight;
 
+    // AI attitudes (teacher's eyes only)
+    var attHtml = '';
+    if (bots.length && r.settings.relations) {
+      attHtml = '<div class="small" style="border:1px dashed var(--gold);border-radius:5px;padding:6px 8px;margin-bottom:6px"><b>AI attitudes</b> (only you see this):<br>';
+      bots.forEach(function (b) {
+        var row = (r.settings.relations[b]) || {};
+        var bits = [];
+        MAP.POWERS.forEach(function (o) {
+          if (o === b) return;
+          var v = row[o] || 0;
+          if (v === 0) return;
+          var face = v >= 3 ? '🤝' : v > 0 ? '🙂' : v <= -3 ? '💀' : '😠';
+          bits.push(face + ' ' + MAP.POWER_INFO[o].name + ' ' + (v > 0 ? '+' : '') + v);
+        });
+        attHtml += '🤖 <b>' + (typeof DIPLOMACY_BOT !== 'undefined' ? DIPLOMACY_BOT.LEADERS[b].short : b) + '</b>: ' +
+          (bits.length ? bits.join(' · ') : 'neutral toward everyone') + '<br>';
+      });
+      attHtml += '</div>';
+    }
+
     // settings
     var s = r.settings;
-    $('dSettings').innerHTML =
+    $('dSettings').innerHTML = attHtml +
       '<label>Centers to win: <input id="setV" type="number" min="7" max="18" value="' + s.victorySCs + '" style="width:60px"></label>' +
       '<label>End year (blank = none): <input id="setEY" type="number" min="1902" max="1950" value="' + (s.endYear || '') + '" style="width:80px"></label>' +
       '<label>Map style the kids see: <select id="setStyle">' +

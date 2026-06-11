@@ -624,9 +624,10 @@
       var out = m.from === model.power;
       div.className = 'msg ' + (out ? 'out' : 'in');
       var who = out ? 'To ' + envoyName(m.to) : 'From ' + envoyName(m.from);
+      var kindIcon = { alliance: '🤝 ', peace: '🕊 ', threat: '⚔ ' }[m.kind] || '';
       var meta = document.createElement('div');
       meta.className = 'meta';
-      meta.textContent = who + ' · ' + (m.turn || '');
+      meta.textContent = kindIcon + who + ' · ' + (m.turn || '');
       var body = document.createElement('div');
       body.textContent = m.text;
       div.appendChild(meta); div.appendChild(body);
@@ -640,13 +641,15 @@
 
   $('msgSend').addEventListener('click', async function () {
     var text = $('msgText').value.trim();
-    if (!text) return;
+    var kind = $('msgKind').value;
+    if (!text && kind === 'chat') return;
     var r = await DiploAPI.call({
       action: 'message', code: localStorage.getItem(CODE_KEY),
-      to: $('msgTo').value, text: text
+      to: $('msgTo').value, text: text, kind: kind
     });
     if (!r.ok) { setBanner('locked', '⚠️ ' + (r.error || 'Could not send.')); return; }
     $('msgText').value = '';
+    $('msgKind').value = 'chat';
     model.version = 0; // force refresh on next poll
     await poll();
     showPane('Msgs');

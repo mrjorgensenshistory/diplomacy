@@ -1,0 +1,71 @@
+DIPLOMACY CLASSROOM GAME - AUDIO CREDITS
+=========================================
+All tracks by Kevin MacLeod (incompetech.com)
+License: Creative Commons Attribution 4.0 (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Required attribution line (include once in game credits screen or README):
+  Music by Kevin MacLeod (incompetech.com) - Licensed under Creative Commons: By Attribution 4.0
+
+-----------------------------------------
+WAR-ROOM / PLANNING AMBIENCE (loopable)
+-----------------------------------------
+warroom-covert-affair.mp3
+  "Covert Affair" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Covert%20Affair.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+
+warroom-dark-times.mp3
+  "Dark Times" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Dark%20Times.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+
+warroom-volatile-reaction.mp3
+  "Volatile Reaction" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Volatile%20Reaction.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+
+-----------------------------------------
+MILITARY MARCH
+-----------------------------------------
+march-invariance.mp3
+  "Invariance" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Invariance.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+
+-----------------------------------------
+DRAMATIC BATTLE / WAR THEMES
+-----------------------------------------
+battle-five-armies.mp3
+  "Five Armies" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Five%20Armies.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+
+battle-stormfront.mp3
+  "Stormfront" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Stormfront.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+
+-----------------------------------------
+VICTORY STINGER
+-----------------------------------------
+victory-fanfare-for-space.mp3
+  "Fanfare for Space" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fanfare%20for%20Space.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+  Note: ~1 min piece; trim or fade early if a <15s stinger is wanted.
+
+-----------------------------------------
+DEFEAT / SOMBER STINGER
+-----------------------------------------
+defeat-hero-down.mp3
+  "Hero Down" - Kevin MacLeod
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Hero%20Down.mp3
+  CC BY 4.0 - Music by Kevin MacLeod (incompetech.com)
+  Note: full piece; fade out after ~15s for a stinger.
+
+-----------------------------------------
+SIZE NOTE: Candidate set totals ~57 MB. After the teacher picks
+final tracks, DELETE the unused candidates before committing to
+GitHub Pages to stay under the ~40 MB budget. Re-encoding kept
+tracks to 128 kbps (ffmpeg -b:a 128k) roughly halves their size.

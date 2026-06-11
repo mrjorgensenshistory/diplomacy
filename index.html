@@ -66,10 +66,16 @@
       <div id="paneMsgs" style="display:none">
         <div class="hint">Negotiate in secret. Promises are not binding — that's Diplomacy. <b>Your teacher can read every message.</b></div>
         <div class="msgcompose">
-          <select id="msgTo"></select>
+          <select id="msgTo" style="flex:1"></select>
+          <select id="msgKind">
+            <option value="chat">💬 Message</option>
+            <option value="alliance">🤝 Propose alliance</option>
+            <option value="peace">🕊 Offer peace</option>
+            <option value="threat">⚔ Send threat</option>
+          </select>
         </div>
         <div class="msgcompose">
-          <textarea id="msgText" maxlength="500" placeholder="Propose an alliance… or pretend to."></textarea>
+          <textarea id="msgText" maxlength="500" placeholder="Write your letter... or just send a proposal."></textarea>
           <button class="act" id="msgSend">Send</button>
         </div>
         <div class="msglist" id="msgList"></div>

@@ -549,11 +549,47 @@ T('long convoy chain works', {
 
   // chatter produces well-formed mail
   var s1 = ENG.initialState({});
-  var msgs = BOT.chatter(s1, s1, 'GERMANY', ['FRANCE', 'ENGLAND']);
+  var msgs = BOT.chatter(s1, s1, 'GERMANY', ['FRANCE', 'ENGLAND'], {});
   check('bot: chatter is an array of at most 2', Array.isArray(msgs) && msgs.length <= 2);
   check('bot: chatter addresses real powers', msgs.every(function (m) {
     return MAP.POWERS.indexOf(m.to) !== -1 && typeof m.text === 'string';
   }));
+
+  // diplomacy is real: alliance proposals accepted/rejected by attitude
+  var rAccept = BOT.respondTo('GERMANY', 'FRANCE', 'alliance', {});
+  check('bot: neutral power accepts alliance', rAccept.accepted === true && rAccept.delta >= 4, JSON.stringify(rAccept));
+  var rReject = BOT.respondTo('GERMANY', 'FRANCE', 'alliance', { GERMANY: { FRANCE: -5 } });
+  check('bot: enemy rejects alliance', !rReject.accepted, JSON.stringify(rReject));
+  var rThreat = BOT.respondTo('RUSSIA', 'TURKEY', 'threat', {});
+  check('bot: threats sour relations', rThreat.delta < 0 && typeof rThreat.text === 'string');
+
+  // attacks leave grudges
+  var sb = makeState({ GERMANY: ['A mun'], FRANCE: ['A bur'] });
+  var rr2 = ENG.resolveMovement(sb, mapOrders({ FRANCE: ['A bur - mun'], GERMANY: ['A mun H'] }));
+  var rels2 = BOT.updateRelations({}, ['GERMANY'], sb, rr2.newState, rr2.results);
+  check('bot: being attacked breeds a grudge', (rels2.GERMANY.FRANCE || 0) < 0, JSON.stringify(rels2));
+
+  // allies are protected: Germany (allied to France) should almost never
+  // strike French units or centers (small treachery chance allowed)
+  var sAlly = makeState({ GERMANY: ['A mun', 'A ruh', 'A sil'], FRANCE: ['A bur', 'A mar', 'A par'] },
+    { scOwners: { par: 'FRANCE', mar: 'FRANCE', bur: 'FRANCE' } });
+  var strikes = 0, trials = 25;
+  for (var t = 0; t < trials; t++) {
+    var bo = BOT.ordersFor(sAlly, 'GERMANY', { GERMANY: { FRANCE: 6 } });
+    bo.forEach(function (o) {
+      if (o.type === 'move' && (sAlly.units[o.dest] && sAlly.units[o.dest].power === 'FRANCE')) strikes++;
+      if (o.type === 'move' && sAlly.scOwners[o.dest] === 'FRANCE') strikes++;
+    });
+  }
+  check('bot: allies rarely attacked (treachery only)', strikes <= trials * 0.6, strikes + ' strikes in ' + trials + ' trials');
+  var strikes2 = 0;
+  for (var t2 = 0; t2 < trials; t2++) {
+    var bo2 = BOT.ordersFor(sAlly, 'GERMANY', { GERMANY: { FRANCE: -6 } });
+    bo2.forEach(function (o) {
+      if (o.type === 'move' && ((sAlly.units[o.dest] && sAlly.units[o.dest].power === 'FRANCE') || sAlly.scOwners[o.dest] === 'FRANCE')) strikes2++;
+    });
+  }
+  check('bot: enemies attacked far more than allies', strikes2 > strikes, strikes2 + ' vs ' + strikes);
 
   // full bot-vs-bot war: must run to completion without a single error
   var st = ENG.initialState({ victorySCs: 12, endYear: 1912 });

@@ -59,7 +59,7 @@ var SHEET_HEADERS_ = {
   State: ['gameId', 'stateJSON'],
   Orders: ['gameId', 'power', 'ordersJSON', 'submitted', 'updated'],
   History: ['gameId', 'idx', 'label', 'stateBeforeJSON', 'ordersJSON', 'resultsJSON', 'ts'],
-  Messages: ['gameId', 'ts', 'from', 'to', 'text', 'turn']
+  Messages: ['gameId', 'ts', 'from', 'to', 'text', 'turn', 'kind']
 };
 
 /* Nuclear repair: deletes and rebuilds all five game tabs with correct
@@ -210,9 +210,10 @@ function effLocked_(g) {
 }
 
 function phaseLabel_(state) {
+  // plain ASCII only: this string survives any copy/paste encoding
   var s = { SPRING: 'Spring', FALL: 'Fall', WINTER: 'Winter' }[state.season] || state.season;
   var p = { MOVE: 'Orders', RETREAT: 'Retreats', BUILD: 'Builds', DONE: 'Game Over' }[state.phase] || state.phase;
-  return s + ' ' + state.year + ' — ' + p;
+  return s + ' ' + state.year + ' - ' + p;
 }
 
 function withinSchedule_() {
@@ -239,7 +240,7 @@ function messagesFor_(gameId, power) {
     if (String(r.gameId) !== String(gameId)) return false;
     return !power || r.from === power || r.to === power;
   }).map(function (r) {
-    return { ts: r.ts, from: r.from, to: r.to, text: r.text, turn: r.turn };
+    return { ts: r.ts, from: r.from, to: r.to, text: r.text, turn: r.turn, kind: r.kind || 'chat' };
   });
 }
 
@@ -285,8 +286,9 @@ function doResolve_(g) {
   var ordersByPower = {};
   for (var p in g.orders) ordersByPower[p] = g.orders[p].list || [];
   // the AI writes its orders at the last possible moment, server-side
+  var rels0 = (g.settings && g.settings.relations) || {};
   ((g.settings && g.settings.bots) || []).forEach(function (bp) {
-    ordersByPower[bp] = DIPLOMACY_BOT.ordersFor(g.state, bp);
+    ordersByPower[bp] = DIPLOMACY_BOT.ordersFor(g.state, bp, rels0);
   });
   var label = phaseLabel_(g.state);
   var stateBefore = JSON.stringify(g.state);
@@ -299,21 +301,23 @@ function doResolve_(g) {
   var prevState = JSON.parse(stateBefore);
   g.state = r.newState;
   g.version++;
+  // grudges, gratitude, and the leaders' poison-pen letters
+  var bots = (g.settings && g.settings.bots) || [];
+  g.settings.relations = DIPLOMACY_BOT.updateRelations(
+    g.settings.relations || {}, bots, prevState, g.state, r.results);
   saveState_(g);
   clearOrders_(g.id);
   saveGameMeta_(g);
-  // the AI leaders write their poison-pen letters after the guns fall silent
   if (prevState.phase === 'MOVE' && !g.state.winner) {
-    var bots = (g.settings && g.settings.bots) || [];
     var humans = DIPLOMACY_MAP.POWERS.filter(function (p) {
       return bots.indexOf(p) === -1 &&
         (ENG.unitCount(g.state, p) > 0 || ENG.scCount(g.state, p) > 0);
     });
     bots.forEach(function (bp) {
       if (ENG.unitCount(g.state, bp) === 0 && ENG.scCount(g.state, bp) === 0) return;
-      DIPLOMACY_BOT.chatter(prevState, g.state, bp, humans).forEach(function (m) {
+      DIPLOMACY_BOT.chatter(prevState, g.state, bp, humans, g.settings.relations).forEach(function (m) {
         sheet_('Messages', []).appendRow([
-          g.id, new Date().toISOString(), bp, m.to, m.text, label
+          g.id, new Date().toISOString(), bp, m.to, m.text, label, 'chat'
         ]);
       });
     });
@@ -394,14 +398,22 @@ function route_(payload) {
     var to = String(payload.to || '').toUpperCase();
     if (DIPLOMACY_MAP.POWERS.indexOf(to) === -1 || to === f3.power) return { ok: false, error: 'Pick another country.' };
     var text = String(payload.text || '').slice(0, 500);
-    if (!text.trim()) return { ok: false, error: 'Empty message.' };
+    var kind = ['alliance', 'peace', 'threat'].indexOf(payload.kind) !== -1 ? payload.kind : 'chat';
+    if (!text.trim() && kind === 'chat') return { ok: false, error: 'Empty message.' };
     sheet_('Messages', []).appendRow([
-      g3.id, new Date().toISOString(), f3.power, to, text, phaseLabel_(g3.state)
+      g3.id, new Date().toISOString(), f3.power, to,
+      text || ('(' + kind + ' proposal)'), phaseLabel_(g3.state), kind
     ]);
-    // AI courts always answer their mail
+    // AI courts always answer their mail, and proposals have real weight
     if (((g3.settings && g3.settings.bots) || []).indexOf(to) !== -1) {
+      var rels3 = g3.settings.relations = g3.settings.relations || {};
+      var resp = DIPLOMACY_BOT.respondTo(to, f3.power, kind, rels3);
+      if (resp.delta) {
+        if (!rels3[to]) rels3[to] = {};
+        rels3[to][f3.power] = Math.max(-6, Math.min(6, (rels3[to][f3.power] || 0) + resp.delta));
+      }
       sheet_('Messages', []).appendRow([
-        g3.id, new Date().toISOString(), to, f3.power, DIPLOMACY_BOT.replyTo(to), phaseLabel_(g3.state)
+        g3.id, new Date().toISOString(), to, f3.power, resp.text, phaseLabel_(g3.state), 'chat'
       ]);
     }
     g3.version++;

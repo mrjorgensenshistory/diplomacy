@@ -94,15 +94,72 @@ var DIPLOMACY_BOT = (function () {
     return out;
   }
 
+  /* ---------- relationships ----------
+   * relations[botPower][otherPower] = score from -6 (blood enemy)
+   * to +6 (firm ally). >= ALLY_AT behaves as alliance: no attacks.
+   * <= ENEMY_AT marks a priority target. Stored by the server in
+   * each game's settings and updated after every resolution.
+   */
+  var ALLY_AT = 3, ENEMY_AT = -3;
+
+  function relTo(relations, power, other) {
+    if (!relations || !relations[power]) return 0;
+    return relations[power][other] || 0;
+  }
+
+  /* Update every bot's feelings from what just happened on the board.
+     Mutates and returns `relations`. */
+  function updateRelations(relations, botPowers, stateBefore, stateAfter, results) {
+    relations = relations || {};
+    botPowers.forEach(function (b) { if (!relations[b]) relations[b] = {}; });
+    function bump(b, other, d) {
+      if (other === b || botPowers.indexOf(b) === -1) return;
+      if (!relations[b]) relations[b] = {};
+      var v = (relations[b][other] || 0) + d;
+      relations[b][other] = Math.max(-6, Math.min(6, v));
+    }
+    // cool toward neutral a little each season
+    botPowers.forEach(function (b) {
+      for (var o in relations[b]) {
+        if (relations[b][o] > 0) relations[b][o]--;
+        else if (relations[b][o] < 0) relations[b][o]++;
+      }
+    });
+    (results || []).forEach(function (e) {
+      var o = e.order || {};
+      if (o.type === 'move' && o.dest) {
+        var victim = stateBefore.units[o.dest];
+        if (victim && victim.power !== e.power) {
+          bump(victim.power, e.power, e.success ? -3 : -2);   // attacked me
+        }
+      }
+      if (o.type === 'support' && o.from) {
+        var helped = stateBefore.units[o.from];
+        if (helped && helped.power !== e.power && e.success) {
+          bump(helped.power, e.power, +2);                     // supported me
+        }
+      }
+    });
+    // losing a supply center cuts deepest
+    for (var p in stateBefore.scOwners) {
+      var was = stateBefore.scOwners[p], is = stateAfter.scOwners[p];
+      if (was && is && was !== is) bump(was, is, -3);
+    }
+    return relations;
+  }
+
   /* ---------- movement phase ---------- */
 
-  function moveOrders(state, power) {
+  function moveOrders(state, power, relations) {
     var myUnits = [];
     for (var p in state.units) {
       if (state.units[p].power === power) myUnits.push({ prov: p, u: state.units[p] });
     }
     var wanted = wantedSCs(state, power);
     var season = state.season;
+    // "normal" difficulty keeps a sliver of treachery: once in a while an
+    // alliance stops protecting you for exactly one season
+    var treacherous = rnd() < 0.12;
 
     // candidate orders per unit, scored
     var unitCands = myUnits.map(function (me) {
@@ -133,6 +190,14 @@ var DIPLOMACY_BOT = (function () {
           if (occ) s -= 1.2;                               // attacking non-SCs rarely worth it
         }
         if (homeThreat && season === 'FALL') s -= 3.5;     // don't abandon home in fall
+        // diplomacy is real: allies are off-limits, enemies are priorities
+        var victimPower = (occ && occ.power !== power) ? occ.power
+          : (MAP.isSC(t) && state.scOwners[t] && state.scOwners[t] !== power ? state.scOwners[t] : null);
+        if (victimPower) {
+          var rel = relTo(relations, power, victimPower);
+          if (rel >= ALLY_AT && !treacherous) s = -8;      // we do not strike our allies
+          else if (rel <= ENEMY_AT) s += 1.8;              // grudges sharpen bayonets
+        }
         s += rnd() * 0.8;
         cands.push({ type: 'move', dest: t, destCoast: pickCoast(m), score: s });
       });
@@ -282,13 +347,13 @@ var DIPLOMACY_BOT = (function () {
 
   /* ---------- entry point ---------- */
 
-  function ordersFor(state, power) {
+  function ordersFor(state, power, relations) {
     try {
-      if (state.phase === 'MOVE') return moveOrders(state, power);
+      if (state.phase === 'MOVE') return moveOrders(state, power, relations);
       if (state.phase === 'RETREAT') return retreatOrders(state, power);
       if (state.phase === 'BUILD') return buildOrders(state, power);
     } catch (e) {
-      // a confused AI just holds — the engine treats missing orders as holds
+      // a confused AI just holds; the engine treats missing orders as holds
       return [];
     }
     return [];
@@ -312,19 +377,19 @@ var DIPLOMACY_BOT = (function () {
     ENGLAND: [
       'His Majesty has read your note with interest. Britannia keeps her own counsel.',
       'A gentleman honors his word. We shall see if you are a gentleman.',
-      'The Royal Navy needs no permission to sail — but your friendship is noted.',
+      'The Royal Navy needs no permission to sail, but your friendship is noted.',
       'Quite. Let us speak again when the season has turned.',
       'England has no eternal allies, only eternal interests. Consider yours.'
     ],
     FRANCE: [
       'Ha! Pretty words. The Tiger judges claws, not promises.',
-      'France agrees — provided France is not asked to trust you.',
+      'France agrees, provided France is not asked to trust you.',
       'War is too serious a matter to leave to promises, mon ami.',
       'You offer peace with one hand. What does the other hand hold?',
       'Very well. But cross our border and I will personally write your obituary.'
     ],
     GERMANY: [
-      'The Kaiser smiles upon your proposal — today, at least.',
+      'The Kaiser smiles upon your proposal. Today, at least.',
       'Germany demands her place in the sun. Stand aside or stand with us.',
       'Bold! I admire boldness. I crush it too, occasionally.',
       'Your message has reached Berlin. Berlin is considering. Berlin considers quickly.',
@@ -332,7 +397,7 @@ var DIPLOMACY_BOT = (function () {
     ],
     ITALY: [
       'Italy hears you. Italy hears everyone. It is our gift.',
-      'An alliance? Perhaps. Italy prefers to choose the winning side — eventually.',
+      'An alliance? Perhaps. Italy prefers to choose the winning side. Eventually.',
       'Rome was not built in a day, and neither is trust. But do go on.',
       'Your terms interest us. Improve them and they may even bind us.',
       'We are friends, of course. The question is for how many seasons.'
@@ -342,14 +407,14 @@ var DIPLOMACY_BOT = (function () {
       'The Emperor is old, but his memory for betrayal is excellent.',
       'Vienna will consider it. Vienna has been considering things since 1273.',
       'Peace on our border would be... refreshing. See that it stays peaceful.',
-      'You write kindly. Kind letters and quiet armies — let us have both.'
+      'You write kindly. Kind letters and quiet armies: let us have both.'
     ],
     RUSSIA: [
       'The Tsar of all the Russias does not bargain. He occasionally agrees.',
       'Russia is vast, patient, and watching. Proceed accordingly.',
       'God sees all treaties. Break this one and answer to both of us.',
       'Winter is our oldest ally. You may be our newest. Behave like it.',
-      'Very well. But remember — the bear sleeps lightly.'
+      'Very well. But remember: the bear sleeps lightly.'
     ],
     TURKEY: [
       'The Sublime Porte acknowledges your message with measured delight.',
@@ -360,38 +425,118 @@ var DIPLOMACY_BOT = (function () {
     ]
   };
 
+  function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
   function replyTo(power) {
     var pool = REPLIES[power] || REPLIES.AUSTRIA;
     return pool[Math.floor(rnd() * pool.length)];
   }
 
+  /* ---------- answering the mail ----------
+   * kind: 'alliance' | 'peace' | 'threat' | 'chat'
+   * Returns { text, delta } where delta adjusts how the bot feels
+   * about the sender. Alliance acceptance is REAL: it pushes the
+   * relation to ally level, and allied bots do not attack you.
+   */
+  function respondTo(botPower, fromPower, kind, relations) {
+    var rel = relTo(relations, botPower, fromPower);
+    var fromName = MAP.POWER_INFO[fromPower].name;
+
+    if (kind === 'alliance') {
+      if (rel <= ENEMY_AT) {
+        return { delta: 0, text: pick([
+          'An alliance? You, who march on my lands? The audacity is almost admirable. Refused.',
+          'I would sooner ally with the winter. At least the winter is honest. No.',
+          'The wounds you have given us are not yet closed, ' + fromName + '. Refused.'
+        ]) };
+      }
+      if (rel < 0) {
+        return { delta: 1, text: pick([
+          'Not yet. Trust is rebuilt with quiet borders, not bold letters. Show me a peaceful season first.',
+          'You ask much, given recent history. Prove your goodwill on the map, then ask again.',
+          'My ministers laugh at your offer. I do not laugh. But I do not accept. Not yet.'
+        ]) };
+      }
+      return { delta: 5, accepted: true, text: pick([
+        'Agreed. From this day our pens and our armies point the same direction. Do not make me regret it.',
+        'Accepted, ' + fromName + '. My soldiers will not raise a hand against yours. See that yours remember the same.',
+        'Very well. We are allies. Betray me and every cannon I own will learn your name.'
+      ]) };
+    }
+
+    if (kind === 'peace') {
+      if (rel <= ENEMY_AT) {
+        return { delta: 1, text: pick([
+          'Peace. A pretty word from the power that wronged us. Withdraw from our borders and we may discuss it.',
+          'I hear you. The guns will decide whether I believe you.'
+        ]) };
+      }
+      return { delta: 2, accepted: true, text: pick([
+        'A quiet border serves us both. Agreed. Keep your side of it quiet.',
+        'Accepted. My units have better places to be than your doorstep.',
+        'Peace between us, then. May it outlive the season.'
+      ]) };
+    }
+
+    if (kind === 'threat') {
+      return { delta: -2, text: pick([
+        'Threats. How original. Note that the powers that threatened us before are smaller now.',
+        'I have weighed your threat. It is light. Do your worst.',
+        'Bold words, ' + fromName + '. My generals thank you for the motivation.'
+      ]) };
+    }
+
+    // plain chat: tone follows the relationship
+    if (rel >= ALLY_AT) {
+      return { delta: 0, text: pick([
+        'Speak freely, friend. Our interests march together.',
+        'Between allies, few words are needed. Consider it considered.',
+        'Noted, ally. While our pact holds, my armies look elsewhere.'
+      ]) };
+    }
+    if (rel <= ENEMY_AT) {
+      return { delta: 0, text: pick([
+        'You write to me? After everything? The nerve is noted. Nothing else is.',
+        'Every letter you send is read aloud to my generals. They find them funny.',
+        'Save your ink, ' + fromName + '. Our answer rides with the army.'
+      ]) };
+    }
+    return { delta: 0, text: replyTo(botPower) };
+  }
+
   /* ---------- proactive scheming between turns ----------
-   * Called after each resolution. The AI writes to human players:
-   * revenge for lost centers, coalitions against the leader, border
-   * sweet-talk (sincere or not — the orders never check the mail).
+   * Called after each resolution. Revenge for lost centers, coalitions
+   * against the leader, ally reassurance, betrayal gloats, border talk.
+   * Sincere or not: the orders consult the relations, not the prose.
    */
 
-  function chatter(stateBefore, stateAfter, power, humanPowers) {
+  function chatter(stateBefore, stateAfter, power, humanPowers, relations) {
     var out = [];
     if (!humanPowers || !humanPowers.length) return out;
     var name = LEADERS[power].short;
 
-    // 1. revenge: who took one of my centers this turn?
+    // 0. betrayal gloat / revenge: centers that changed hands involving me
     for (var p in stateBefore.scOwners) {
-      if (stateBefore.scOwners[p] === power &&
-          stateAfter.scOwners[p] && stateAfter.scOwners[p] !== power) {
-        var thief = stateAfter.scOwners[p];
-        if (humanPowers.indexOf(thief) !== -1 && rnd() < 0.85) {
-          out.push({ to: thief, text: pick([
-            'You will answer for ' + p.toUpperCase() + '. Not today, perhaps. But you will answer.',
-            p.toUpperCase() + ' was a province. What you have purchased is a war.',
-            'Enjoy ' + p.toUpperCase() + ' while you can. ' + cap(name) + ' forgets nothing.'
-          ]) });
-        }
+      var was = stateBefore.scOwners[p], is = stateAfter.scOwners[p];
+      if (!was || !is || was === is) continue;
+      if (was === power && humanPowers.indexOf(is) !== -1 && rnd() < 0.85) {
+        out.push({ to: is, text: pick([
+          'You will answer for ' + p.toUpperCase() + '. Not today, perhaps. But you will answer.',
+          p.toUpperCase() + ' was a province. What you have purchased is a war.',
+          'Enjoy ' + p.toUpperCase() + ' while you can. ' + name + ' forgets nothing.'
+        ]) });
+      }
+      if (is === power && humanPowers.indexOf(was) !== -1 &&
+          relTo(relations, power, was) >= 0 && rnd() < 0.7) {
+        out.push({ to: was, text: pick([
+          p.toUpperCase() + ' is mine. You may call it betrayal. History will call it statecraft.',
+          'Nothing personal about ' + p.toUpperCase() + '. The map simply looks better this way.',
+          'Our friendship was real. So is my need for ' + p.toUpperCase() + '. These things happen.'
+        ]) });
       }
     }
 
-    // 2. coalition: gang up on whoever is winning
+    // 1. coalition: gang up on whoever is winning (ask friends first)
     var best = null, bestN = 0;
     MAP.POWERS.forEach(function (q) {
       if (q === power) return;
@@ -399,47 +544,54 @@ var DIPLOMACY_BOT = (function () {
       if (n > bestN) { bestN = n; best = q; }
     });
     if (best && bestN >= 5 && rnd() < 0.5) {
-      var allies = humanPowers.filter(function (h) { return h !== best && h !== power; });
-      if (allies.length) {
-        var ally = allies[Math.floor(rnd() * allies.length)];
-        out.push({ to: ally, text: pick([
-          MAP.POWER_INFO[best].name + ' grows fat — ' + bestN + ' centers already. Shall we put him on a diet?',
+      var cands = humanPowers.filter(function (h) { return h !== best && h !== power; });
+      cands.sort(function (a, b) { return relTo(relations, power, b) - relTo(relations, power, a); });
+      if (cands.length) {
+        out.push({ to: cands[0], text: pick([
+          MAP.POWER_INFO[best].name + ' grows fat, ' + bestN + ' centers already. Shall we put him on a diet?',
           'Every map needs balance. ' + MAP.POWER_INFO[best].name + ' has forgotten this. Remind him with me.',
           'I propose a quiet understanding against ' + MAP.POWER_INFO[best].name + '. Quiet understandings win wars.'
         ]) });
       }
     }
 
-    // 3. border talk: sweet words for a neighbor (possibly hollow)
-    if (out.length < 2 && rnd() < 0.45) {
-      var neighbors = [];
-      for (var prov in stateAfter.units) {
-        var u = stateAfter.units[prov];
-        if (u.power !== power) continue;
-        provNeighbors(prov).forEach(function (nb) {
-          var v = stateAfter.units[nb];
-          if (v && v.power !== power && humanPowers.indexOf(v.power) !== -1 &&
-              neighbors.indexOf(v.power) === -1) neighbors.push(v.power);
-        });
-      }
-      if (neighbors.length) {
-        var nb2 = neighbors[Math.floor(rnd() * neighbors.length)];
-        out.push({ to: nb2, text: pick([
-          'Our armies stand close enough to smell each other\'s coffee. Let us keep it at coffee.',
-          'I have no designs on your lands this season. You may believe as much of that as you like.',
-          'A quiet border between us frees us both to be dangerous elsewhere. Think on it.',
-          'Your soldiers watch mine, mine watch yours. Wasteful. I propose we both look elsewhere.'
-        ]) });
+    // 2. relationship maintenance: reassure allies, lean on enemies
+    if (out.length < 2 && rnd() < 0.5) {
+      var spoken = out.map(function (m) { return m.to; });
+      var pool = humanPowers.filter(function (h) { return h !== power && spoken.indexOf(h) === -1; });
+      pool.sort(function (a, b) { return Math.abs(relTo(relations, power, b)) - Math.abs(relTo(relations, power, a)); });
+      if (pool.length) {
+        var h2 = pool[0];
+        var r2 = relTo(relations, power, h2);
+        if (r2 >= ALLY_AT) {
+          out.push({ to: h2, text: pick([
+            'Our pact holds, friend. My armies face away from you, as promised.',
+            'Allies should speak even when nothing burns. Nothing burns. Let us keep it so.',
+            'Stand firm. While we are joined, neither of us fights alone.'
+          ]) });
+        } else if (r2 <= ENEMY_AT) {
+          out.push({ to: h2, text: pick([
+            'I have not forgotten what you did. My maps have your provinces circled.',
+            'Sleep lightly, ' + MAP.POWER_INFO[h2].name + '. ' + name + ' is patient, not forgiving.',
+            'There is still time to make amends. Not much. But some.'
+          ]) });
+        } else if (rnd() < 0.5) {
+          out.push({ to: h2, text: pick([
+            'Our armies stand close enough to smell each other\'s coffee. Let us keep it at coffee.',
+            'I have no designs on your lands this season. Believe as much of that as you like.',
+            'A quiet border between us frees us both to be dangerous elsewhere. Think on it.'
+          ]) });
+        }
       }
     }
 
     return out.slice(0, 2);
-
-    function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
-    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   }
 
-  return { ordersFor: ordersFor, replyTo: replyTo, chatter: chatter, LEADERS: LEADERS };
+  return {
+    ordersFor: ordersFor, replyTo: replyTo, respondTo: respondTo,
+    chatter: chatter, updateRelations: updateRelations, LEADERS: LEADERS
+  };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

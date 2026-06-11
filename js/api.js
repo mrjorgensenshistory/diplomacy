@@ -70,7 +70,8 @@ var DiploAPI = (function () {
         allowViewLocked: !!settings.allowViewLocked,
         autoResolve: !!settings.autoResolve,
         mapStyle: settings.mapStyle === 'terrain' ? 'terrain' : 'empire',
-        bots: (settings.bots || []).filter(function (p) { return MAP.POWERS.indexOf(p) !== -1; })
+        bots: (settings.bots || []).filter(function (p) { return MAP.POWERS.indexOf(p) !== -1; }),
+        relations: {}
       },
       version: 1,
       state: ENG.initialState({ victorySCs: settings.victorySCs || 12, endYear: settings.endYear || null }),
@@ -101,7 +102,7 @@ var DiploAPI = (function () {
   function phaseLabel(state) {
     var s = { SPRING: 'Spring', FALL: 'Fall', WINTER: 'Winter' }[state.season] || state.season;
     var p = { MOVE: 'Orders', RETREAT: 'Retreats', BUILD: 'Builds', DONE: 'Game Over' }[state.phase] || state.phase;
-    return s + ' ' + state.year + ' — ' + p;
+    return s + ' ' + state.year + ' - ' + p;
   }
 
   function playerView(found) {
@@ -133,8 +134,9 @@ var DiploAPI = (function () {
     var ordersByPower = {};
     for (var p in g.orders) ordersByPower[p] = g.orders[p].list || [];
     // the AI writes its orders at the last possible moment, server-side
+    var rels = (g.settings && g.settings.relations) || {};
     ((g.settings && g.settings.bots) || []).forEach(function (bp) {
-      ordersByPower[bp] = DIPLOMACY_BOT.ordersFor(g.state, bp);
+      ordersByPower[bp] = DIPLOMACY_BOT.ordersFor(g.state, bp, rels);
     });
     var label = phaseLabel(g.state);
     var stateBefore = g.state;
@@ -149,19 +151,21 @@ var DiploAPI = (function () {
     g.state = r.newState;
     g.orders = {};
     g.version++;
-    // the AI leaders write their poison-pen letters after the guns fall silent
+    // grudges, gratitude, and the leaders' poison-pen letters
+    var bots = (g.settings && g.settings.bots) || [];
+    g.settings.relations = DIPLOMACY_BOT.updateRelations(
+      g.settings.relations || {}, bots, stateBefore, g.state, r.results);
     if (stateBefore.phase === 'MOVE' && !g.state.winner) {
-      var bots = (g.settings && g.settings.bots) || [];
       var humans = MAP.POWERS.filter(function (p) {
         return bots.indexOf(p) === -1 &&
           (ENG.unitCount(g.state, p) > 0 || ENG.scCount(g.state, p) > 0);
       });
       bots.forEach(function (bp) {
         if (ENG.unitCount(g.state, bp) === 0 && ENG.scCount(g.state, bp) === 0) return;
-        DIPLOMACY_BOT.chatter(stateBefore, g.state, bp, humans).forEach(function (m) {
+        DIPLOMACY_BOT.chatter(stateBefore, g.state, bp, humans, g.settings.relations).forEach(function (m) {
           g.messages.push({
             ts: new Date().toISOString(), from: bp, to: m.to,
-            text: m.text, turn: label
+            text: m.text, turn: label, kind: 'chat'
           });
         });
       });
@@ -214,16 +218,23 @@ var DiploAPI = (function () {
       var to = String(payload.to || '').toUpperCase();
       if (MAP.POWERS.indexOf(to) === -1 || to === f3.power) return { ok: false, error: 'Pick another country to message.' };
       var text = String(payload.text || '').slice(0, 500);
-      if (!text.trim()) return { ok: false, error: 'Empty message.' };
+      var kind = ['alliance', 'peace', 'threat'].indexOf(payload.kind) !== -1 ? payload.kind : 'chat';
+      if (!text.trim() && kind === 'chat') return { ok: false, error: 'Empty message.' };
       f3.game.messages.push({
         ts: new Date().toISOString(), from: f3.power, to: to,
-        text: text, turn: phaseLabel(f3.game.state)
+        text: text || ('(' + kind + ' proposal)'), turn: phaseLabel(f3.game.state), kind: kind
       });
-      // AI courts always answer their mail
+      // AI courts always answer their mail, and proposals have real weight
       if (((f3.game.settings && f3.game.settings.bots) || []).indexOf(to) !== -1) {
+        var rels3 = f3.game.settings.relations = f3.game.settings.relations || {};
+        var resp = DIPLOMACY_BOT.respondTo(to, f3.power, kind, rels3);
+        if (resp.delta) {
+          if (!rels3[to]) rels3[to] = {};
+          rels3[to][f3.power] = Math.max(-6, Math.min(6, (rels3[to][f3.power] || 0) + resp.delta));
+        }
         f3.game.messages.push({
           ts: new Date().toISOString(), from: to, to: f3.power,
-          text: DIPLOMACY_BOT.replyTo(to), turn: phaseLabel(f3.game.state)
+          text: resp.text, turn: phaseLabel(f3.game.state), kind: 'chat'
         });
       }
       f3.game.version++;
