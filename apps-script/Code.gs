@@ -436,7 +436,7 @@ function route_(payload) {
       victorySCs: settings.victorySCs || 12,
       endYear: settings.endYear || null,
       allowViewLocked: !!settings.allowViewLocked,
-      autoResolve: !!settings.autoResolve,
+      autoResolve: settings.autoResolve !== false,   // on unless turned off
       mapStyle: settings.mapStyle === 'terrain' ? 'terrain' : 'empire',
       bots: (settings.bots || []).filter(function (p) {
         return DIPLOMACY_MAP.POWERS.indexOf(p) !== -1;

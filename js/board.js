@@ -199,6 +199,26 @@ var DiploBoard = (function () {
         return c.tagName === 'path';
       });
 
+      // pin units to the visual center of the province when possible;
+      // the label corner was ambiguous for units near borders
+      var bigPath = null, bigArea = 0;
+      paths.forEach(function (p) {
+        try {
+          var bb = p.getBBox();
+          var area = bb.width * bb.height;
+          if (area > bigArea) { bigArea = area; bigPath = p; }
+        } catch (e) {}
+      });
+      if (bigPath) {
+        try {
+          var bb2 = bigPath.getBBox();
+          var cx = bb2.x + bb2.width / 2, cy = bb2.y + bb2.height / 2;
+          var pt0 = self.svg.createSVGPoint();
+          pt0.x = cx; pt0.y = cy;
+          if (bigPath.isPointInFill(pt0)) self.anchors[key] = [cx, cy];
+        } catch (e) {}
+      }
+
       if (!isProvince) {
         // Switzerland (impassable): recolor, no interaction
         paths.forEach(function (p) {

@@ -58,7 +58,7 @@
   }
 
   async function poll() {
-    if (!model || saving) return;
+    if (!model || saving || savePending) return;
     var r = await DiploAPI.call({ action: 'state', code: localStorage.getItem(CODE_KEY), version: model.version });
     if (!r.ok) {
       if (r.locked) setBanner('locked', '🔒 ' + (r.error || 'Game locked.'));
@@ -113,6 +113,7 @@
     }
 
     renderActionBar();
+    applyHighlights();
     renderOrderList();
     renderWhoIsIn();
     renderMessages();
@@ -169,7 +170,7 @@
       del.title = 'Remove this order';
       del.addEventListener('click', function () {
         myOrders.splice(i, 1);
-        saveOrders(false);
+        queueSave();
       });
       li.appendChild(del);
       ul.appendChild(li);
@@ -184,13 +185,30 @@
   $('submitBtn').addEventListener('click', function () { saveOrders(true); });
   $('unsubmitBtn').addEventListener('click', function () { saveOrders(false); });
 
-  async function saveOrders(submitted) {
+  /* Optimistic saves: the screen updates instantly, the server catches up
+     in the background. Rapid clicking gets batched into one request. */
+  var saveTimer = null;
+  var savePending = false;
+
+  function queueSave() {
+    savePending = true;
+    model.submitted = false;
+    if (model.submittedBy) model.submittedBy[model.power] = false;
+    mode = { step: 'idle' };
+    renderAll();                       // instant feedback
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () { saveOrders(false, true); }, 400);
+  }
+
+  async function saveOrders(submitted, background) {
+    clearTimeout(saveTimer);
     saving = true;
     var r = await DiploAPI.call({
       action: 'orders', code: localStorage.getItem(CODE_KEY),
       orders: myOrders, submitted: submitted
     });
     saving = false;
+    savePending = false;
     if (!r.ok) {
       setBanner('locked', '⚠️ ' + (r.error || 'Could not save.'));
       return;
@@ -198,8 +216,10 @@
     model.version = r.version;
     model.submitted = submitted;
     if (model.submittedBy) model.submittedBy[model.power] = submitted;
-    mode = { step: 'idle' };
-    renderAll();
+    if (!background) {
+      mode = { step: 'idle' };
+      renderAll();
+    }
   }
 
   /* ---------------- map interaction ---------------- */
@@ -226,7 +246,7 @@
     var v = ENG.validateOrder(model.state, model.power, o);
     if (!v.ok) { hint('⚠️ ' + v.error); mode = { step: 'idle' }; render(); return; }
     myOrders.push(o);
-    saveOrders(false);
+    queueSave();
   }
 
   function moveClick(prov) {
@@ -358,7 +378,7 @@
   function setRetreatOrder(o) {
     myOrders = myOrders.filter(function (x) { return x.unit !== o.unit; });
     myOrders.push(o);
-    saveOrders(false);
+    queueSave();
   }
 
   /* ----- BUILD phase ----- */
@@ -380,11 +400,11 @@
             return { label: c.toUpperCase() + ' coast', value: c };
           }), function (c) {
             myOrders.push({ type: 'build', loc: prov, unitType: 'F', coast: c });
-            saveOrders(false);
+            queueSave();
           });
         } else {
           myOrders.push({ type: 'build', loc: prov, unitType: t });
-          saveOrders(false);
+          queueSave();
         }
       });
     } else if (adj.delta < 0) {
@@ -395,7 +415,7 @@
         return;
       }
       myOrders.push({ type: 'remove', loc: prov });
-      saveOrders(false);
+      queueSave();
     }
   }
 
