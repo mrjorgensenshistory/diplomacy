@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diplomacy — Music Audition Room</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .audwrap { max-width: 860px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .trackcard { display: flex; align-items: center; gap: 14px; background: #fffdf6; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+  .trackcard .info { flex: 1; min-width: 0; }
+  .trackcard .tname { font-weight: bold; font-size: 15.5px; }
+  .trackcard .tdesc { font-size: 13px; font-style: italic; color: #6b5d45; }
+  .trackcard audio { width: 300px; }
+  .moodtag { font-variant: small-caps; letter-spacing: 1px; font-size: 13px; padding: 2px 10px; border-radius: 10px; border: 1px solid var(--gold); background: #fff8e6; white-space: nowrap; }
+  @media (max-width: 700px) { .trackcard { flex-direction: column; align-items: stretch; } .trackcard audio { width: 100%; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <h1>Diplomacy</h1>
+  <span class="sub">Music Audition Room — pick your soundtrack</span>
+</header>
+
+<main class="audwrap">
+  <div class="panel">
+    <h2>How to choose</h2>
+    <div class="small">
+      Press play on anything. You're picking up to three roles:
+      <b>① a background loop</b> kids hear while plotting orders,
+      <b>② a victory fanfare</b> when someone wins,
+      <b>③ a defeat lament</b> for the fallen.
+      Tell Claude your picks (e.g., <i>"background: Covert Affair, victory: fanfare, defeat: Hero Down"</i>)
+      and they get wired into the game. Music will be <b>off by default</b> with a 🎵 button —
+      nothing autoplays at full volume across 28 Chromebooks.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>① War-room background (loops while plotting)</h2>
+    <div class="trackcard">
+      <span class="moodtag">sly tension</span>
+      <div class="info"><div class="tname">Covert Affair</div>
+        <div class="tdesc">Noir spy-jazz — back-room deals, cigarette smoke, whispered betrayals.</div></div>
+      <audio controls preload="none" src="audio/warroom-covert-affair.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">brooding</span>
+      <div class="info"><div class="tname">Dark Times</div>
+        <div class="tdesc">Low strings and dread — the continent holds its breath.</div></div>
+      <audio controls preload="none" src="audio/warroom-dark-times.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">ticking clock</span>
+      <div class="info"><div class="tname">Volatile Reaction</div>
+        <div class="tdesc">Percussive suspense — orders due, time running out.</div></div>
+      <audio controls preload="none" src="audio/warroom-volatile-reaction.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">military march</span>
+      <div class="info"><div class="tname">Invariance</div>
+        <div class="tdesc">Snare and brass — armies on the move, boots on cobblestone.</div></div>
+      <audio controls preload="none" src="audio/march-invariance.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">epic orchestral</span>
+      <div class="info"><div class="tname">Five Armies</div>
+        <div class="tdesc">Big sweeping war theme — trailer-grade drama.</div></div>
+      <audio controls preload="none" src="audio/battle-five-armies.mp3"></audio>
+    </div>
+    <div class="trackcard">
+      <span class="moodtag">storm of war</span>
+      <div class="info"><div class="tname">Stormfront</div>
+        <div class="tdesc">Sweeping orchestral conflict — the longest, grandest of the set.</div></div>
+      <audio controls preload="none" src="audio/battle-stormfront.mp3"></audio>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>② Victory fanfare</h2>
+    <div class="trackcard">
+      <span class="moodtag">triumphant</span>
+      <div class="info"><div class="tname">Fanfare for Space</div>
+        <div class="tdesc">Bright brass triumph — plays once when a winner is crowned.</div></div>
+      <audio controls preload="none" src="audio/victory-fanfare-for-space.mp3"></audio>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>③ Defeat lament</h2>
+    <div class="trackcard">
+      <span class="moodtag">mournful</span>
+      <div class="info"><div class="tname">Hero Down</div>
+        <div class="tdesc">Solo piano and strings — for empires that are no more.</div></div>
+      <audio controls preload="none" src="audio/defeat-hero-down.mp3"></audio>
+    </div>
+  </div>
+
+  <div class="panel small muted">
+    All tracks by Kevin MacLeod (incompetech.com), Creative Commons BY 4.0 — free for classroom use with credit (already included in the game).
+  </div>
+</main>
+</body>
+</html>
