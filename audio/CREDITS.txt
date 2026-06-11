@@ -80,3 +80,12 @@ period-pack-up-your-troubles-1917.mp3 - "Pack Up Your Troubles in Your Old Kit B
 period-tipperary-march-band-1907.mp3 - "Tipperary March", Zon-o-phone Concert Band, 1907. Public domain.
   https://archive.org/details/78_tipperary-march_zon-o-phone-concert-band_gbia0451700a
 (warroom-covert-affair.mp3 removed - not selected)
+
+--- Over There upgrade ---
+overthere-instrumental-usaf-band.mp3 - "Cohan's Big Three" medley, The United States Air Force Band. Public domain (US federal work).
+  https://archive.org/details/GeorgeM.CohanMedley
+overthere-vocal-1917-restored.mp3 - "Over There" (1917), restored transfer via Wikimedia Commons. Public domain.
+  https://commons.wikimedia.org/wiki/File:Over_There_(1917).mp3
+overthere-vocal-caruso-1918.mp3 - "Over There", Enrico Caruso, 1918. Public domain.
+  https://archive.org/details/78_over-there_enrico-caruso-geo-m-cohan-louis-delamarre_gbia0290409a
+(period-over-there-billy-murray-1917.mp3 removed - too much static)
